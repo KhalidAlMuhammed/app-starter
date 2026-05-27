@@ -1,0 +1,20 @@
+# Template app compose file.
+#
+# DO NOT change `container_name` or the `networks` block — bootstrap and the
+# platform proxy rely on the `<app>-app` container name on the raed_platform
+# network. Add more services (a worker, a redis, etc.) as you need.
+
+services:
+  app:
+    build: .
+    container_name: ${APP_NAME:?APP_NAME must be set — run via raed-bootstrap, or 'APP_NAME=foo docker compose up'}-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 3000
+    networks:
+      - raed_platform
+
+networks:
+  raed_platform:
+    external: true
