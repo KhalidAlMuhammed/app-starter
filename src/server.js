@@ -1,9 +1,10 @@
-// Raed Apps starter. Replace with your app.
+// App starter — replace with your app.
 //
-// Conventions assumed by the platform:
+// Conventions enforced by the platform proxy:
 //   - Listen on $PORT, bind 0.0.0.0
-//   - Trust X-Auth-Email / X-Auth-Slack-Id / X-Auth-Name from the proxy.
-//   - Reject requests missing X-Auth-Email (defense in depth).
+//   - Trust X-Auth-Email / X-Auth-Slack-Id / X-Auth-Name set by the proxy.
+//   - Reject requests missing X-Auth-Email (defense in depth — should never
+//     happen in production since the proxy gates everything).
 
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
@@ -30,8 +31,7 @@ app.get('/', (c) => {
 </head><body>
   <h1>👋 Hi ${escapeHtml(u.name)}</h1>
   <p>You're signed in as <code>${escapeHtml(u.email)}</code>.</p>
-  <p>This is the Raed Apps starter. Replace <code>src/server.js</code> with your app.</p>
-  <p><a href="https://auth.apps.raed.vc/auth/logout">Sign out</a></p>
+  <p>Replace <code>src/server.js</code> with your app.</p>
 </body></html>`);
 });
 

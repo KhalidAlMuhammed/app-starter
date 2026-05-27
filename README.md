@@ -1,47 +1,55 @@
-# raed-app-template
+# app-starter
 
-Starter for apps that run on the Raed Apps Platform (`*.apps.raed.vc`).
+Minimal Hono + Docker starter for an internal web app behind a Slack-OTP
+proxy. You write the app logic; the platform handles TLS, login, secrets,
+and your subdomain.
 
 ## How to use this with Cursor / Claude / Codex
 
-1. Copy this directory into a new git repo on your GitHub account.
-2. Open it in Cursor (or paste it into Claude / Codex). Tell the AI tool
-   what you want to build. Point it at `docs/CONTRACT.md` so it follows
-   the platform's conventions.
-3. Push to GitHub.
-4. On the VM, run:
+1. Click **Use this template** at the top of the GitHub page to create your
+   own repo.
+2. Open it in your editor (or paste files into Claude / Codex). Tell the AI
+   tool what you want to build. **Important**: point it at this README so it
+   follows the conventions below — your app won't work otherwise.
+3. Push your repo to GitHub.
+4. Open the deploy form your admin gave you, paste the repo URL, give it a
+   name, hit deploy.
 
-   ```bash
-   raed-bootstrap <app-name> https://github.com/<you>/<repo>.git
-   ```
+## What you write — and what's wired up for you
 
-That's it — your app is live at `https://<app-name>.apps.raed.vc`.
+You write:
 
-## What's already wired up
+- `src/server.js` — your app logic. Bind to `$PORT`. Read the request
+  header `X-Auth-Email` to know who's signed in. That's it.
 
-- **Auth**: every request arrives with `X-Auth-Email`, `X-Auth-Slack-Id`,
-  `X-Auth-Name`. No login UI to build.
-- **Secrets**: drop them in GCP Secret Manager; the deploy script writes
-  `.env` for you.
-- **TLS**: handled by the platform proxy.
-- **Subdomain**: yours, by name.
+The platform provides:
 
-## What you write
+- HTTPS subdomain at `<your-app-name>.<platform-domain>`
+- Login on every page — your app receives `X-Auth-Email` (no login UI to build)
+- Shared API keys (Slack, Anthropic, etc.) already in your app's env vars
+- Redeploy via the web form on every change
 
-Just the app logic. Files in this template you can keep or replace:
+## Conventions — do NOT change these without asking the admin
 
-- `Dockerfile` — Node 20 Alpine, `node src/server.js` (rewrite if you want
-  Python / Go / whatever, as long as you bind to `$PORT`)
-- `docker-compose.yml` — joins `raed_platform` network, sets container name.
-  **Don't change `container_name` or the network** — bootstrap & the proxy
-  rely on those.
-- `src/server.js` — Hello world. Replace with your app.
+These three things in `docker-compose.yml` are what lets the platform proxy
+find your app. Changing them silently breaks routing:
 
-## Running locally
+```yaml
+services:
+  app:                                  # service name must be `app`
+    container_name: ${APP_NAME}-app     # exact format, populated at deploy
+    networks:
+      - raed_platform                   # the shared platform network
+```
+
+## Running locally (no platform)
 
 ```bash
 npm install
-SLACK_BOT_TOKEN=... AUTH_JWT_SECRET=... npm run dev
-# visit http://localhost:3000
-# (locally, X-Auth-Email won't be set — use a fallback like ?fake_email=you@raed.vc)
+PORT=3000 npm run dev
+# visit http://localhost:3000/?fake_email=you@work.example
 ```
+
+The `?fake_email=…` querystring stands in for the `X-Auth-Email` header when
+`NODE_ENV !== 'production'`, so you can test logged-in flows without the
+proxy.
